@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta http-equiv="Cache" content="no-cache" />
+    <link rel="stylesheet" href="../js/mescroll.min.css">
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: white
+        }
+        ul {
+            list-style-type: none
+        }
+        a {
+            text-decoration: none;
+            color: #18B4FE;
+        }
+        [v-cloak] {
+            display: none;
+        }
+        .header {
+            z-index: 9990;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 44px;
+            line-height: 44px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+        }
+        .header .btn-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 12px;
+            line-height: 22px;
+        }
+        .mescroll {
+            position: fixed;
+            top: 44px;
+            bottom: 0;
+            height: auto;
+        }
+        .data-list li {
+            position: relative;
+            padding: 3px 5px 3px 5px;
+            border-bottom: 1px solid rgb(17, 231, 99);
+        }
+        .data-list .pd-img {
+            position: absolute;
+            left: 18px;
+            top: 18px;
+            width: 80px;
+            height: 80px;
+        }
+        .data-list .pd1-img {
+            width: 100%;
+            height: 100%;
+        }
+        .data-list .pd-name {
+            font-size: 16px;
+            line-height: 20px;
+            height: 40px;
+            overflow: hidden;
+        }
+        .data-list .pd-price {
+            margin-top: 8px;
+            color: red;
+        }
+        .data-list .pd-sold {
+            font-size: 12px;
+            margin-top: 8px;
+            color: gray;
+        }
+        #bigimg img {
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+<p class="header">香港资料第<font color="red" font-weight="bold">44</font>期，第<font color="blue" font-weight="bold">1</font>份资料</p>
+        <div id="mescroll" class="mescroll">
+            <ul id="dataList" class="data-list" v-cloak>
+                <li v-for="(pd,index) in pdlist" :key="index">
+                    <img class="pd1-img" :imgurl="pd" src="../预览图片.png" :id="index" @click="Onclick($event,pd,index)" />
+                </li>
+            </ul>
+        </div>
+        <div id="bigimg" @click="closeimg($event)" :style="{display: isDisplay}"></div>
+    </div>
+</body>
+<script src="../js/mescroll.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="../vue.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="../js/transform.js"></script>
+<script src="../js/alloy_finger.js"></script>
+<script src="../js/to.js"></script>
+<script src="../js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8">
+var datajson="hk20230422012042/hk1hk20230422012042.json";
+    var images=[];
+    var vm = new Vue({
+        el: "#dataList",
+        el: "#app",
+        data: {
+            mescroll: null,
+            pdlist: [],
+            sreenheight:0,
+            isDisplay: "none"
+        },
+        mounted: function () {
+            var self = this;
+            self.mescroll = new MeScroll("mescroll", {
+                up: {
+                    callback: self.upCallback,
+                    isBounce: false,
+                    toTop: {
+                        src: "../回到顶部.png",
+                    },
+                    empty: {
+                        warpId: "dataList",
+                        icon: "../没有数据.png",
+                    },
+                    lazyLoad: {
+                        use: true
+                    }}
+            });
+            var h=window.screen.height;
+            this.sreenheight=h/4;
+            this.initAlloyFinger();
+        },
+        methods: {
+            upCallback: function (page) {
+                var self = this;
+                getListDataFromNet(page.num, page.size, function (curPageData) {
+                    if (page.num == 1) self.pdlist = [];
+                    self.pdlist = self.pdlist.concat(curPageData);
+                    self.mescroll.endSuccess(curPageData.length);
+                }, function () {
+                    self.mescroll.endErr();
+                });
+            },
+            Onclick(a, pd, index) {
+                this.isDisplay = "block";
+                imgsrc = a.currentTarget.src;
+                $("#bigimg").html("<img src=" + imgsrc + " />");
+                var tapBox = document.getElementById("bigimg");
+                tapBox.translateY = this.sreenheight;
+                tapBox.scaleX=1;
+                tapBox.scaleY=1;
+                tapBox.translateX=0;
+            },
+            initAlloyFinger(){
+                var tapBox = document.getElementById("bigimg");
+                Transform(tapBox);
+                var initScale = 1;
+                new AlloyFinger(tapBox, {
+                    multipointStart: function () {
+                        To.stopAll();
+                        initScale = tapBox.scaleX;
+                    },
+                    pinch: function (evt) {
+                        tapBox.scaleX = tapBox.scaleY = initScale * evt.zoom;
+                    },
+                    pressMove: function (evt) {
+                        tapBox.translateX += evt.deltaX;
+                        tapBox.translateY += evt.deltaY;
+                        evt.preventDefault();
+                    }
+                });
+            },
+            ease(x) {
+                return Math.sqrt(1 - Math.pow(x - 1, 2));
+            },
+            closeimg($event) {
+                // var h=$event.view.screen.height;
+                $event.currentTarget.scaleX=1;
+                $event.currentTarget.scaleY=1;
+                $event.currentTarget.translateX=0;
+                $event.currentTarget.translateY=this.sreenheight;
+                this.isDisplay = "none";
+            },
+            getDataJson() {
+                fetch('https://qazxsw001.gitee.io/qinglanjiaoyu/'+datajson)
+                    .then((response) => response.json())
+                    .then((json) => {images = json.ImgList;});
+            },
+        },
+        created:function(){
+            this.getDataJson();
+        }
+    });
+    function getListDataFromNet(pageNum, pageSize, successCallback, errorCallback) {
+        setTimeout(function () {
+            var data = images;
+            var listData = [];
+            for (var i = (pageNum - 1) * pageSize; i < pageNum * pageSize; i++) {
+                if (i == data.length) break;
+                listData.push(data[i]);
+            }
+            successCallback && successCallback(listData);
+        }, 500)
+    }
+</script>
+</html>
