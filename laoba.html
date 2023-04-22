@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="vue.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- 遍历图片 -->
+        <img v-for="(imgUrl, index) in ImgList" :key="index" :src="imgUrl" />
+    </div>
+
+    <script type="module">
+        var ImgPathList=[]
+        
+        var app = new Vue({
+            el: "#app",
+            data: {
+                ImgList:["image/1.jpg","image/2.jpg","image/3.jpg","image/4.jpg",]
+            },
+            methods: {
+                getDataJson: function (event) {
+                    fetch('http://staryl_admin.gitee.io/qinglanjiaoyu/data.json')
+                    .then((response) => response.json())
+                    .then((json) =>{
+                        this.ImgList=json.ImgList
+                        console.log(ImgPathList)
+                    });
+                }
+            },
+            created:function(){
+                this.getDataJson()
+            }
+        });
+    </script>
+</body>
+
+</html>

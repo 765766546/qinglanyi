@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>资料</title>
+    <script src="vue.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mescroll.js@1.4.1/mescroll.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mescroll.js@1.4.1/mescroll.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+    <div id="app" >
+            <!--内容...-->
+            <div v-for="(imgUrl, index) in ImgList" :key="index" class="rightullidiv">
+        <!-- <div v-for="(imgUrl, index) in ImgList" :key="index" class="rightullidiv "></div> -->
+                <!-- 遍历图片 -->
+                <img :src="imgUrl" class="rightulliimg" />
+                <!-- <img :src="imgUrl" class="rightulliimg" /> -->
+            </div>
+    </div>
+
+    <script type="module">
+        var app = new Vue({
+            el: "#app",
+            data: {
+                ImgList:[],
+                datas:[],
+                toLoad_num: 0,
+                loaded_num:0,//已经加载的数量
+                loaded_count:0,//加载次数
+                show:false,
+                Image_total:0,
+                yushu:0,
+                cishu:0,
+                mescroll: null, // mescroll实例对象
+            },
+            mounted: function() {
+                        //创建MeScroll对象,down可以不用配置,因为内部已默认开启下拉刷新,重置列表数据为第一页
+                        //解析: 下拉回调默认调用mescroll.resetUpScroll(); 而resetUpScroll会将page.num=1,再执行up.callback,从而实现刷新列表数据为第一页;
+                        this.mescroll = new MeScroll("app", { //请至少在vue的mounted生命周期初始化mescroll,以确保您配置的id能够被找到
+                            up: {
+                            callback: this.loadMore, //上拉回调
+                            //以下参数可删除,不配置
+                            lazyLoad:{
+                            use:true//启动懒加载
+                            },
+                            htmlNodata: '<p class="upwarp-nodata">-- END --</p>',
+                            noMoreSize: 5, //如果列表已无数据,可设置列表的总数量要大于5才显示无更多数据;
+                            // 避免列表数据过少(比如只有一条数据),显示无更多数据会不好看
+                            // 这就是为什么无更多数据有时候不显示的原因
+                            
+                    }
+            });
+
+            },
+            methods: {
+                getDataJson(){
+                    fetch('https://staryl_admin.gitee.io/qinglanjiaoyu/data.json')
+                    .then((response) => response.json())
+                    .then((json) =>{
+                        this.datas=json.ImgList;
+                        this.Image_total=this.datas.length;
+                        this.yushu=this.Image_total%10
+                        this.cishu=this.Image_total/10
+                        for(var j = 0; j < 10; j++){
+                            this.ImgList.push(this.datas[j]);
+                        }
+                        this.cishu--;
+                        this.loaded_count++;
+                        this.loaded_num+=10;
+                    });
+                },
+                loadMore(){
+                    if(this.Image_total>this.loaded_num){
+                        var chazhi=this.Image_total-this.loaded_num;
+                        if(chazhi==this.yushu&&this.yushu!=0){
+                            for(var j = this.cishu*10; j < this.image_total; j++){ 
+                                this.ImgList.push(this.datas[j]); 
+                            }
+                            this.loaded_num+=chazhi; 
+                        }else{ 
+                            var n=(this.loaded_count+1)*10; 
+                            for(var j=this.loaded_count*10;j < n; j++){
+                                 this.ImgList.push(this.datas[j]); 
+                            } 
+                            this.loaded_num+=10; 
+                        } 
+                        this.loaded_count++;
+                        // 数据渲染成功后,隐藏下拉刷新的状态
+                       // this.mescroll.endSuccess(10)
+                    }
+                },
+                //滚动触底加载
+                onScroll() {
+                    /*document.querySelector('#app').clientHeight是内容元素的总高度（翻页后高度也会随这个内容的加入而增加）
+                      document.documentElement.scrollTop是获取滚动条的位置高度；
+                      document.documentElement.clientHeight取得浏览器可见区域高度；
+                        //可滚动容器的高度
+                    let innerHeight = document.querySelector('#app').clientHeight;
+                    //屏幕尺寸高度
+                    let outerHeight = document.documentElement.clientHeight;
+                    //可滚动容器超出当前窗口显示范围的高度
+                    let scrollTop = document.documentElement.scrollTop;
+                    //scrollTop在页面为滚动时为0，开始滚动后，慢慢增加，滚动到页面底部时，出现innerHeight < (outerHeight + scrollTop)的情况，严格来讲，是接近底部。
+                    if (innerHeight < (outerHeight + scrollTop)) {
+                        //加载更多操作
+                        console.log("loadmore");
+                    }
+                    */
+
+                    // let innerHeight = document.querySelector('#app').clientHeight 
+                    var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+                //这三个是获取窗口高度
+                    let offsetHeight = document.documentElement.offsetHeight
+                    let scrollTop = document.documentElement.scrollTop
+                    // console.log(scrollHeight + '-' + offsetHeight + '-' + scrollTop)
+                    console.log('scrollHeight-:' +scrollHeight + '-offsetHeight:' + offsetHeight + '-scrollTop:' + scrollTop)
+                    //是否滚动到底部的判断
+			        if(scrollTop + offsetHeight > scrollHeight){
+                    // if (innerHeight<(outerHeight + scrollTop)) {
+                        alert("hahaha")
+                    }
+                }
+        },
+            created:function(){
+                    // window.addEventListener('scroll', this.onScroll);
+                    this.getDataJson();
+            }
+    });
+</script>
+    
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .mescroll{
+    position: fixed;
+    top: 44px;
+    bottom: 0;
+    height: auto; /*如设置bottom:50px,则需height:auto才能生效*/
+  }
+  /*img标签,在src设置默认图*/
+  .data-list .pd-img{
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  width: 80px;
+  height: 80px;
+  }
+  .rightullidiv {
+    width: 100%;
+    /*background: #f2f2f2;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .rightulliimg {
+      max-width: 101%;
+    }
+  }
+</style>
+</body>
+
+</html>
