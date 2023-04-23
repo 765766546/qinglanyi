@@ -46,8 +46,8 @@ uploaded_image_arr = []
 def get_access_token():
     data = {
         'grant_type': 'password',
-        'username': '765766546@qq.com',
-        'password': 'yJl520txq',
+        'username': '',
+        'password': '',
         'client_id': 'c47c19c580caec8604c88390a1877dba0316a302d136c02fb5ad37c841f84ba3',
         'client_secret': '2bb1ca34f0406fd91fccb95b318a964c48bc1af18923164f5d63635cd0a81c74',
         'scope': 'projects user_info issues notes',
